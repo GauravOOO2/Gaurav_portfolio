@@ -5,7 +5,7 @@ window.SITE = {
   email: "varmagaurav840@gmail.com",
   phone: "+91-9353387399",
   location: "Bangalore, India",
-  resumeUrl: "resume.pdf",
+  resumeUrl: "J_Gaurav_Varma_Software_Engineer_Resume.pdf",
   resumeUpdated: "2026-07-14",
   githubUsername: "GauravOOO2",
   githubUrl: "https://github.com/GauravOOO2",
