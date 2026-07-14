@@ -1,262 +1,222 @@
-/**
-* Template Name: iPortfolio
-* Updated: Nov 17 2023 with Bootstrap v5.3.2
-* Template URL: https://bootstrapmade.com/iportfolio-bootstrap-portfolio-websites-template/
-* Author: BootstrapMade.com
-* License: https://bootstrapmade.com/license/
-*/
-(function() {
-  "use strict";
+// Shared behavior for index.html: nav, scroll-reveal, counters, accordion, and
+// rendering project/architecture/blog cards from the data files.
 
-  /**
-   * Easy selector helper function
-   */
-  const select = (el, all = false) => {
-    el = el.trim()
-    if (all) {
-      return [...document.querySelectorAll(el)]
-    } else {
-      return document.querySelector(el)
-    }
-  }
+document.addEventListener("DOMContentLoaded", () => {
+  initNav();
+  initReveal();
+  initCounters();
+  initExperienceAccordion();
+  renderProjectCards();
+  renderArchitectureCards();
+  renderPostCards();
+  renderGithub();
+  fillSiteLinks();
+});
 
-  /**
-   * Easy event listener function
-   */
-  const on = (type, el, listener, all = false) => {
-    let selectEl = select(el, all)
-    if (selectEl) {
-      if (all) {
-        selectEl.forEach(e => e.addEventListener(type, listener))
-      } else {
-        selectEl.addEventListener(type, listener)
-      }
-    }
-  }
-
-  /**
-   * Easy on scroll event listener 
-   */
-  const onscroll = (el, listener) => {
-    el.addEventListener('scroll', listener)
-  }
-
-  /**
-   * Navbar links active state on scroll
-   */
-  let navbarlinks = select('#navbar .scrollto', true)
-  const navbarlinksActive = () => {
-    let position = window.scrollY + 200
-    navbarlinks.forEach(navbarlink => {
-      if (!navbarlink.hash) return
-      let section = select(navbarlink.hash)
-      if (!section) return
-      if (position >= section.offsetTop && position <= (section.offsetTop + section.offsetHeight)) {
-        navbarlink.classList.add('active')
-      } else {
-        navbarlink.classList.remove('active')
-      }
-    })
-  }
-  window.addEventListener('load', navbarlinksActive)
-  onscroll(document, navbarlinksActive)
-
-  /**
-   * Scrolls to an element with header offset
-   */
-  const scrollto = (el) => {
-    let elementPos = select(el).offsetTop
-    window.scrollTo({
-      top: elementPos,
-      behavior: 'smooth'
-    })
-  }
-
-  /**
-   * Back to top button
-   */
-  let backtotop = select('.back-to-top')
-  if (backtotop) {
-    const toggleBacktotop = () => {
-      if (window.scrollY > 100) {
-        backtotop.classList.add('active')
-      } else {
-        backtotop.classList.remove('active')
-      }
-    }
-    window.addEventListener('load', toggleBacktotop)
-    onscroll(document, toggleBacktotop)
-  }
-
-  /**
-   * Mobile nav toggle
-   */
-  on('click', '.mobile-nav-toggle', function(e) {
-    select('body').classList.toggle('mobile-nav-active')
-    this.classList.toggle('bi-list')
-    this.classList.toggle('bi-x')
-  })
-
-  /**
-   * Scrool with ofset on links with a class name .scrollto
-   */
-  on('click', '.scrollto', function(e) {
-    if (select(this.hash)) {
-      e.preventDefault()
-
-      let body = select('body')
-      if (body.classList.contains('mobile-nav-active')) {
-        body.classList.remove('mobile-nav-active')
-        let navbarToggle = select('.mobile-nav-toggle')
-        navbarToggle.classList.toggle('bi-list')
-        navbarToggle.classList.toggle('bi-x')
-      }
-      scrollto(this.hash)
-    }
-  }, true)
-
-  /**
-   * Scroll with ofset on page load with hash links in the url
-   */
-  window.addEventListener('load', () => {
-    if (window.location.hash) {
-      if (select(window.location.hash)) {
-        scrollto(window.location.hash)
-      }
-    }
+function fillSiteLinks() {
+  document.querySelectorAll("[data-resume-link]").forEach((el) => (el.href = SITE.resumeUrl));
+  document.querySelectorAll("[data-github-link]").forEach((el) => (el.href = SITE.githubUrl));
+  document.querySelectorAll("[data-linkedin-link]").forEach((el) => (el.href = SITE.linkedinUrl));
+  document.querySelectorAll("[data-leetcode-link]").forEach((el) => (el.href = SITE.leetcodeUrl));
+  document.querySelectorAll("[data-email-link]").forEach((el) => (el.href = `mailto:${SITE.email}`));
+  document.querySelectorAll("[data-email-text]").forEach((el) => (el.textContent = SITE.email));
+  document.querySelectorAll("[data-resume-updated]").forEach((el) => {
+    el.textContent = new Date(SITE.resumeUpdated).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   });
+}
 
-  /**
-   * Hero type effect
-   */
-  const typed = select('.typed')
-  if (typed) {
-    let typed_strings = typed.getAttribute('data-typed-items')
-    typed_strings = typed_strings.split(',')
-    new Typed('.typed', {
-      strings: typed_strings,
-      loop: true,
-      typeSpeed: 100,
-      backSpeed: 50,
-      backDelay: 2000
-    });
-  }
+function initNav() {
+  const nav = document.getElementById("site-nav");
+  const toggle = document.querySelector(".nav-toggle");
+  const links = document.querySelector(".nav-links");
 
-  /**
-   * Skills animation
-   */
-  let skilsContent = select('.skills-content');
-  if (skilsContent) {
-    new Waypoint({
-      element: skilsContent,
-      offset: '80%',
-      handler: function(direction) {
-        let progress = select('.progress .progress-bar', true);
-        progress.forEach((el) => {
-          el.style.width = el.getAttribute('aria-valuenow') + '%'
-        });
-      }
-    })
-  }
+  window.addEventListener("scroll", () => nav.classList.toggle("scrolled", window.scrollY > 8), { passive: true });
 
-  /**
-   * Porfolio isotope and filter
-   */
-  window.addEventListener('load', () => {
-    let portfolioContainer = select('.portfolio-container');
-    if (portfolioContainer) {
-      let portfolioIsotope = new Isotope(portfolioContainer, {
-        itemSelector: '.portfolio-item'
+  toggle?.addEventListener("click", () => links.classList.toggle("open"));
+  links?.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => links.classList.remove("open")));
+
+  const sections = [...document.querySelectorAll("section[id]")];
+  const navLinks = [...document.querySelectorAll(".nav-links a")];
+  const spy = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        navLinks.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === `#${entry.target.id}`));
       });
-
-      let portfolioFilters = select('#portfolio-flters li', true);
-
-      on('click', '#portfolio-flters li', function(e) {
-        e.preventDefault();
-        portfolioFilters.forEach(function(el) {
-          el.classList.remove('filter-active');
-        });
-        this.classList.add('filter-active');
-
-        portfolioIsotope.arrange({
-          filter: this.getAttribute('data-filter')
-        });
-        portfolioIsotope.on('arrangeComplete', function() {
-          AOS.refresh()
-        });
-      }, true);
-    }
-
-  });
-
-  /**
-   * Initiate portfolio lightbox 
-   */
-  const portfolioLightbox = GLightbox({
-    selector: '.portfolio-lightbox'
-  });
-
-  /**
-   * Portfolio details slider
-   */
-  new Swiper('.portfolio-details-slider', {
-    speed: 400,
-    loop: true,
-    autoplay: {
-      delay: 5000,
-      disableOnInteraction: false
     },
-    pagination: {
-      el: '.swiper-pagination',
-      type: 'bullets',
-      clickable: true
-    }
-  });
+    { rootMargin: "-40% 0px -55% 0px" }
+  );
+  sections.forEach((s) => spy.observe(s));
+}
 
-  /**
-   * Testimonials slider
-   */
-  new Swiper('.testimonials-slider', {
-    speed: 600,
-    loop: true,
-    autoplay: {
-      delay: 5000,
-      disableOnInteraction: false
+function initReveal() {
+  const targets = document.querySelectorAll(".reveal");
+  const io = new IntersectionObserver(
+    (entries, obs) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("in");
+          obs.unobserve(entry.target);
+        }
+      });
     },
-    slidesPerView: 'auto',
-    pagination: {
-      el: '.swiper-pagination',
-      type: 'bullets',
-      clickable: true
+    { threshold: 0.12 }
+  );
+  targets.forEach((t, i) => {
+    t.style.setProperty("--i", i % 8);
+    io.observe(t);
+  });
+}
+
+function initCounters() {
+  const counters = document.querySelectorAll("[data-count-to]");
+  const io = new IntersectionObserver(
+    (entries, obs) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        animateCount(entry.target);
+        obs.unobserve(entry.target);
+      });
     },
-    breakpoints: {
-      320: {
-        slidesPerView: 1,
-        spaceBetween: 20
-      },
+    { threshold: 0.5 }
+  );
+  counters.forEach((c) => io.observe(c));
+}
 
-      1200: {
-        slidesPerView: 3,
-        spaceBetween: 20
-      }
-    }
+function animateCount(el) {
+  const to = parseFloat(el.dataset.countTo);
+  const decimals = el.dataset.countTo.includes(".") ? 1 : 0;
+  const duration = 1100;
+  const start = performance.now();
+  function tick(now) {
+    const p = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = (to * eased).toFixed(decimals);
+    if (p < 1) requestAnimationFrame(tick);
+    else el.textContent = to.toFixed(decimals);
+  }
+  requestAnimationFrame(tick);
+}
+
+function initExperienceAccordion() {
+  document.querySelectorAll(".exp-head").forEach((head) => {
+    head.addEventListener("click", () => head.closest(".exp-card").classList.toggle("open"));
   });
+}
 
-  /**
-   * Animation on scroll
-   */
-  window.addEventListener('load', () => {
-    AOS.init({
-      duration: 1000,
-      easing: 'ease-in-out',
-      once: true,
-      mirror: false
-    })
-  });
+function techTags(list, max = 5) {
+  return list
+    .slice(0, max)
+    .map((t) => `<span class="tag">${t}</span>`)
+    .join("");
+}
 
-  /**
-   * Initiate Pure Counter 
-   */
-  new PureCounter();
+function renderProjectCards() {
+  const grid = document.getElementById("projects-grid");
+  if (!grid) return;
+  grid.innerHTML = PROJECTS.map(
+    (p, i) => `
+    <a href="project.html?slug=${p.slug}" class="card project-card reveal" style="--i:${i}">
+      <div class="badge-row">
+        <span class="project-kind">${p.category}</span>
+      </div>
+      <h3>${p.title}</h3>
+      <p class="tagline">${p.tagline}</p>
+      <div class="project-stack">${techTags(p.techStack)}</div>
+      <span class="arrow-link">View case study
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </span>
+    </a>`
+  ).join("");
+}
 
-})()
+function renderArchitectureCards() {
+  const grid = document.getElementById("architecture-grid");
+  if (!grid) return;
+  const deep = PROJECTS.filter((p) => p.hasDeepDive);
+  grid.innerHTML = deep
+    .map(
+      (p, i) => `
+    <a href="project.html?slug=${p.slug}#architecture" class="card arch-card reveal" style="--i:${i}">
+      <div class="arch-diagram-thumb">${p.diagramSvg}</div>
+      <div class="arch-card-body">
+        <h3>${p.title}</h3>
+        <p>${p.tagline}</p>
+      </div>
+    </a>`
+    )
+    .join("");
+}
+
+function renderPostCards() {
+  const grid = document.getElementById("posts-grid");
+  if (!grid) return;
+  grid.innerHTML = POSTS.map(
+    (post, i) => `
+    <a href="post.html?slug=${post.slug}" class="card post-card reveal" style="--i:${i}">
+      <div class="meta-row"><span>${post.date}</span><span>·</span><span>${post.readTime}</span></div>
+      <h3>${post.title}</h3>
+      <p>${post.excerpt}</p>
+      <div class="project-stack">${techTags(post.tags, 3)}</div>
+    </a>`
+  ).join("");
+}
+
+async function renderGithub() {
+  const grid = document.getElementById("github-grid");
+  if (!grid) return;
+
+  if (!SITE.githubUsername) {
+    renderGithubFallback(grid);
+    return;
+  }
+
+  try {
+    const res = await fetch(`https://api.github.com/users/${SITE.githubUsername}/repos?sort=updated&per_page=6`);
+    if (!res.ok) throw new Error("GitHub API error");
+    const repos = await res.json();
+    grid.innerHTML = repos
+      .map(
+        (r) => `
+      <a href="${r.html_url}" target="_blank" rel="noopener" class="card gh-card reveal">
+        <div class="gh-card-top">
+          <span class="gh-card-name">${r.name}</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg>
+        </div>
+        <p style="font-size:0.88rem">${r.description ?? "No description provided."}</p>
+        <div class="gh-stat-row">
+          ${r.language ? `<span><span class="gh-lang-dot"></span>${r.language}</span>` : ""}
+          <span>★ ${r.stargazers_count}</span>
+          <span>⑂ ${r.forks_count}</span>
+        </div>
+      </a>`
+      )
+      .join("");
+  } catch (e) {
+    renderGithubFallback(grid);
+  }
+}
+
+function renderGithubFallback(grid) {
+  const fallback = PROJECTS.slice(0, 6).map((p) => ({
+    name: p.slug,
+    description: p.tagline,
+    techStack: p.techStack,
+  }));
+  grid.innerHTML = fallback
+    .map(
+      (r) => `
+    <div class="card gh-card reveal">
+      <div class="gh-card-top">
+        <span class="gh-card-name">${r.name}</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg>
+      </div>
+      <p style="font-size:0.88rem">${r.description}</p>
+      <div class="gh-stat-row">
+        <span><span class="gh-lang-dot"></span>${r.techStack[0]}</span>
+        <span>Repo link coming soon</span>
+      </div>
+    </div>`
+    )
+    .join("");
+}
